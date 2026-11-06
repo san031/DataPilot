@@ -205,25 +205,17 @@ The first prototype will use SQLite to reduce setup overhead. PostgreSQL
 may be considered if required by the implementation or demonstration
 environment.
 
-  -----------------------------------------------------------------------
-  Table                               Example fields
-  ----------------------------------- -----------------------------------
-  `customers`                         customer ID, name, email,
-                                      registration date
+## Initial database design
 
-  `products`                          product ID, product name, category,
-                                      unit price
+| Table | Example fields |
+|---|---|
+| `customers` | Customer ID, name, email, registration date |
+| `products` | Product ID, product name, category, unit price |
+| `orders` | Order ID, customer ID, order date, status |
+| `order_items` | Order item ID, order ID, product ID, quantity, unit price |
+| `payments` | Payment ID, order ID, amount, payment status, payment date |
+| `employees` *(optional)* | Employee ID, name, department, role |
 
-  `orders`                            order ID, customer ID, order date,
-                                      status
-
-  `order_items`                       order item ID, order ID, product
-                                      ID, quantity, unit price
-
-  `payments`                          payment ID, order ID, amount,
-                                      payment status, payment date
-
-  -----------------------------------------------------------------------
 
 Primary keys, foreign keys, data types, and relationships will be
 documented in the schema. Synthetic records will be generated for the
