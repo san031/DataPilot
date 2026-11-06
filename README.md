@@ -1,7 +1,7 @@
 # DataPilot AI
 
 **Agentic Business Intelligence and Database Assistant**\
-Hackathon Track: **Agentic Fine-tuning --- Data and Database Agents**\
+Hackathon Track: **Agentic Fine-tuning - Data and Database Agents**
 
 > DataPilot AI is a proposed agentic system that answers business
 > questions by inspecting a database, selecting appropriate tools,
@@ -62,7 +62,7 @@ Fine-tuning:
 -   [AgentTune](https://github.com/Lexsi-Labs/AgentTune)
 -   [AuditKIT](https://github.com/Lexsi-Labs/AuditKIT)
 
-### AgentTune --- training and agent framework
+### AgentTune 
 
 AgentTune will be used for the agentic training workflow. The project
 will investigate and use the repository's supported interfaces for:
@@ -84,7 +84,7 @@ and supported options must be taken from the checked-out repository
 version and its examples. This README does not assume that illustrative
 component names are stable public APIs. -->
 
-### AuditKIT --- evaluation and verification
+### AuditKIT 
 
 AuditKIT will be used to evaluate agent behavior and task outcomes. We
 will inspect and use the repository's supported interfaces for:
@@ -101,7 +101,7 @@ Where compatible, AgentTune execution traces will be passed through the
 documented AuditKIT integration or converted using the repository's
 supported trace format.
 
-### Separation of responsibilities
+<!-- ### Separation of responsibilities
 
   -----------------------------------------------------------------------
   Component                           Responsibility
@@ -127,7 +127,7 @@ supported trace format.
 
 AuditKIT is primarily the evaluation layer. Its metrics should not be
 described as automatically driving GRPO updates unless that integration
-is explicitly implemented and verified.
+is explicitly implemented and verified. -->
 
 ## 4. Permitted Aya model choices
 
@@ -223,7 +223,6 @@ environment.
   `payments`                          payment ID, order ID, amount,
                                       payment status, payment date
 
-  `employees` (optional)              employee ID, name, department, role
   -----------------------------------------------------------------------
 
 Primary keys, foreign keys, data types, and relationships will be
@@ -298,27 +297,17 @@ The initial training experiment will investigate GRPO and a verifiable,
 task-specific reward. The final reward implementation must follow
 AgentTune's actual reward-function interface.
 
-Candidate reward components:
+## Candidate reward components
 
-  -----------------------------------------------------------------------
-  Reward dimension                    Desired behavior
-  ----------------------------------- -----------------------------------
-  Result correctness                  Query result matches the verified
-                                      expected result
-
-  SQL execution                       Query executes successfully
-
-  Tool selection                      Appropriate tool is selected
-
-  Tool arguments                      Arguments follow the tool schema
-
-  Task completion                     User's requested task is completed
-
-  Efficiency                          Avoid unnecessary or repeated calls
-
-  Safety                              Respect read-only and query
-                                      restrictions
-  -----------------------------------------------------------------------
+| Reward dimension | Desired behavior |
+|---|---|
+| **Result correctness** | Query result matches the verified expected result. |
+| **SQL execution** | Query executes successfully. |
+| **Tool selection** | Appropriate tool is selected. |
+| **Tool arguments** | Arguments follow the tool schema. |
+| **Task completion** | User's requested task is completed. |
+| **Efficiency** | Avoid unnecessary or repeated calls. |
+| **Safety** | Respect read-only and query restrictions. |
 
 <!-- Rewards should be designed and tested to discourage reward hacking. For
 example, syntactically valid SQL should not receive full task-success
@@ -366,7 +355,7 @@ value.
 
 ## 11. User interface
 
-A Streamlit interface is proposed for the demonstration. It may display:
+<!-- A Streamlit interface is proposed for the demonstration. It may display:
 
 -   Natural-language question input.
 -   Agent status and tool-call sequence.
@@ -377,7 +366,7 @@ A Streamlit interface is proposed for the demonstration. It may display:
 -   Baseline-versus-fine-tuned evaluation charts.
 
 The UI is a presentation layer; it must not bypass the agent's safety
-checks or fabricate evaluation results.
+checks or fabricate evaluation results. -->
 
  ## 12. Proposed project structure
 
@@ -415,10 +404,10 @@ DataPilot-AI/
 ├── .gitignore
 └── README.md
 ``` -->
-
+<!-- 
 This is the proposed DataPilot AI project structure. AgentTune and
 AuditKIT should remain separate dependencies or checked-out repositories
-rather than being copied wholesale into this project.
+rather than being copied wholesale into this project. -->
 
 
 
