@@ -1,0 +1,21 @@
+id,question,domain,difficulty
+Q01,Which five customers have placed the highest number of orders?,Customers,medium
+Q02,How many customers are registered in each city?,Customers,easy
+Q03,Which customers have never placed an order?,Customers,medium
+Q04,Which five products generated the highest paid sales revenue?,Products and categories,medium
+Q05,Which product categories generated the highest paid sales revenue?,Products and categories,medium
+Q06,What is the average listed product price in each category?,Products and categories,easy
+Q07,Which five products generated the highest gross profit from completed payments?,Products and categories,hard
+Q08,How many orders were placed in each month?,Orders and payments,medium
+Q09,What is the total value of completed payments?,Orders and payments,easy
+Q10,How many orders are there in each order status?,Orders and payments,easy
+Q11,"Which payment methods are used most frequently, and how many payments use each method?",Orders and payments,easy
+Q12,Which products are below their reorder level at any warehouse? Show the warehouse and stock details.,Inventory and warehouses,medium
+Q13,Which warehouse holds the greatest total number of inventory units? Show totals for all warehouses.,Inventory and warehouses,easy
+Q14,What is the total stock quantity of each product across all warehouses?,Inventory and warehouses,medium
+Q15,How many additional units should be ordered to bring every below-reorder inventory record up to its reorder level? Show the requirement by product.,Inventory and warehouses,hard
+Q16,How many shipments are currently in transit?,Shipments and returns,easy
+Q17,Which shipping carriers have handled the most shipments?,Shipments and returns,easy
+Q18,What are the most common reasons for product returns?,Shipments and returns,easy
+Q19,Which five customers have the highest total value of completed purchases?,Cross-domain analysis,hard
+Q20,"Among products with at least one warehouse below its reorder level, which five have the highest paid sales revenue? Include their total stock and number of low-stock warehouse records.",Cross-domain analysis,hard
