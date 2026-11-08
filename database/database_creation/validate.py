@@ -62,5 +62,5 @@ def validate(db_path: Path) -> bool:
 
 
 if __name__ == "__main__":
-    from database.build_db import DB_PATH
+    from database.database_creation.build_db import DB_PATH
     raise SystemExit(0 if validate(DB_PATH) else 1)
