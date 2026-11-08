@@ -222,6 +222,29 @@ documented in the schema. Synthetic records will be generated for the
 prototype. Expected answers for benchmark questions will be computed
 directly from the database and checked before use.
 
+### Building the database
+
+The SQLite database is generated, not committed (`data/*.db` is in
+`.gitignore`). Create it from the repository root:
+
+```powershell
+python -m database.database_creation.build_db
+```
+
+This runs `generate.py` (synthetic records, seeded with `SEED = 42` so
+every build produces the same data), `load.py` (creates the tables from
+`schema.sql` and inserts the rows), and `validate.py` (foreign-key and
+consistency checks). The result is written to `data/ecommerce.db`.
+
+Notes:
+
+-   Run the command from the repository root, not from inside
+    `database/database_creation/`, because the scripts import
+    `database.database_creation.*`.
+-   Each run deletes and rebuilds `data/ecommerce.db`.
+-   The command exits with a non-zero status if validation fails.
+-   Only the Python standard library is required for this step.
+
 <!-- ## 7. Agent tools and safety
 
 The initial tool set is expected to include:
