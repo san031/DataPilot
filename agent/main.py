@@ -5,7 +5,7 @@ from agent.react_agent import ask_datapilot
 model, tokenizer = load_model()
 
 question = """
-How many orders exist?
+How many customers exist?
 """
 
 event_log = ask_datapilot(
