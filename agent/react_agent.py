@@ -157,37 +157,53 @@ def parse_action(response):
         return None
 
 
+
 def make_react_policy(model, tokenizer):
 
     def policy(state):
 
+        # Start with the system prompt.
         messages = [
-            {"role": "system", "content": SYSTEM_PROMPT}
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            }
         ]
 
-        # Reconstruct the task and previous tool observations.
+        # Collect previous task and tool observations.
         observations = [
             event.payload.get("text", "")
             for event in state.events
         ]
 
-        for i, observation in enumerate(observations):
+        # Build one consolidated user message.
+        context = ""
 
-            if i == 0:
-                messages.append({
-                    "role": "user",
-                    "content": "Business question: " + observation
-                })
+        if observations:
+            context += "Business question:\n"
+            context += str(observations[0]) + "\n\n"
 
-            else:
-                messages.append({
-                    "role": "user",
-                    "content": "Tool observation: " + observation
-                })
+            if len(observations) > 1:
+                context += "Previous tool observations:\n"
+
+                for i, observation in enumerate(observations[1:], start=1):
+                    context += (
+                        f"\nObservation {i}:\n"
+                        f"{observation}\n"
+                    )
+
+        else:
+            context = "No previous observations are available.\n"
+
+        context += (
+            "\nChoose your next action based on the business question "
+            "and available observations.\n"
+            "Return JSON only."
+        )
 
         messages.append({
             "role": "user",
-            "content": "Choose your next action. Return JSON only."
+            "content": context
         })
 
         response = generate_response(
@@ -198,9 +214,9 @@ def make_react_policy(model, tokenizer):
 
         action = parse_action(response)
 
+        # Retry once if the generated response is invalid.
         if action is None:
 
-            # Bounded recovery: retry with a correction prompt.
             correction = messages + [
                 {
                     "role": "assistant",
@@ -210,7 +226,8 @@ def make_react_policy(model, tokenizer):
                     "role": "user",
                     "content": (
                         "Your previous response was invalid. "
-                        "Return a valid JSON tool action."
+                        "Return exactly one valid JSON action "
+                        "with action and arguments fields."
                     )
                 }
             ]
@@ -224,16 +241,20 @@ def make_react_policy(model, tokenizer):
             action = parse_action(response)
 
         if action is None:
+
             return {
                 "name": "finish",
                 "arguments": {
-                    "answer": "Unable to generate a valid tool action."
+                    "answer": (
+                        "Unable to generate a valid tool action."
+                    )
                 }
             }
 
         return action
 
     return policy
+
 
 
 def create_agent(model, tokenizer):
