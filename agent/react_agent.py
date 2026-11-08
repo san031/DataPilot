@@ -122,38 +122,66 @@ def parse_action(response):
         return None
 
 
+def format_action(action):
+    """Serialise a parsed action as the JSON the model is asked to emit."""
+
+    return json.dumps({
+        "action": action["name"],
+        "arguments": action["arguments"]
+    })
+
+
+def build_messages(observations, past_actions):
+    """Build the chat history with strict user/assistant alternation.
+
+    observations: [task, obs_1, obs_2, ...]  (from state.events)
+    past_actions: [action_json_1, action_json_2, ...]  (the policy's own
+                  earlier actions); observation i+1 is the result of
+                  action i.
+
+    Result: system, user(question), assistant(action), user(observation),
+    ... ending with a user message (the aya chat template rejects two
+    consecutive messages of the same role).
+    """
+
+    if len(observations) != len(past_actions) + 1:
+        raise ValueError(
+            f"Expected {len(past_actions) + 1} observations for "
+            f"{len(past_actions)} past actions, got {len(observations)}."
+        )
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": "Business question: " + observations[0]},
+    ]
+
+    for action_json, observation in zip(past_actions, observations[1:]):
+        messages.append({"role": "assistant", "content": action_json})
+        messages.append({
+            "role": "user",
+            "content": "Tool observation: " + observation
+        })
+
+    # Fold the instruction into the last user message instead of adding
+    # another user turn.
+    messages[-1]["content"] += "\n\nChoose your next action. Return JSON only."
+
+    return messages
+
+
 def make_react_policy(model, tokenizer):
 
     def policy(state):
 
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT}
-        ]
-
-        # Reconstruct the task and previous tool observations.
+        # state.events holds only observations; the policy's own actions
+        # are kept in state.scratch (one list per episode).
         observations = [
             event.payload.get("text", "")
             for event in state.events
         ]
+        past_actions = state.scratch.setdefault("actions", [])
 
-        for i, observation in enumerate(observations):
-
-            if i == 0:
-                messages.append({
-                    "role": "user",
-                    "content": "Business question: " + observation
-                })
-
-            else:
-                messages.append({
-                    "role": "user",
-                    "content": "Tool observation: " + observation
-                })
-
-        messages.append({
-            "role": "user",
-            "content": "Choose your next action. Return JSON only."
-        })
+        messages = build_messages(observations, past_actions)
 
         response = generate_response(
             model,
@@ -195,6 +223,10 @@ def make_react_policy(model, tokenizer):
                     "answer": "Unable to generate a valid tool action."
                 }
             }
+
+        # Remember the action so the next prompt can replay it as an
+        # assistant turn.
+        past_actions.append(format_action(action))
 
         return action
 
