@@ -12,6 +12,68 @@ Hackathon Track: **Agentic Fine-tuning - Data and Database Agents**
 
 ------------------------------------------------------------------------
 
+## Installation and setup
+
+**Prerequisites:** Python 3.12 or newer (required by AgentTune), Git, and
+a Hugging Face account with access to the gated
+[`CohereLabs/aya-expanse-8b`](https://huggingface.co/CohereLabs/aya-expanse-8b)
+model.
+
+1.  Clone this repository.
+
+    ```powershell
+    git clone https://github.com/san031/DataPilot.git
+    cd DataPilot
+    ```
+
+2.  Clone **AgentTune** and **AuditKIT** into the repository root. They
+    are separate repositories and are not stored in this one.
+
+    ```powershell
+    git clone https://github.com/Lexsi-Labs/AgentTune.git
+    git clone https://github.com/Lexsi-Labs/AuditKIT.git
+    ```
+
+3.  Create and activate a virtual environment.
+
+    ```powershell
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    ```
+
+    On macOS or Linux:
+
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+
+4.  Install the project requirements.
+
+    ```powershell
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    ```
+
+5.  Install AgentTune and AuditKIT in editable mode.
+
+    ```powershell
+    pip install -e ./AgentTune
+    pip install -e ./AuditKIT
+    ```
+
+6.  Log in to Hugging Face so the Aya model can be downloaded. Accept the
+    model's access conditions on its Hugging Face page first, then create
+    a read token at <https://huggingface.co/settings/tokens>.
+
+    ```powershell
+    hf auth login
+    ```
+
+7.  Build the database (see [Building the database](#building-the-database)).
+
+------------------------------------------------------------------------
+
 ## 1. Problem
 
 Business users often need information from structured databases but may
@@ -221,6 +283,19 @@ Primary keys, foreign keys, data types, and relationships will be
 documented in the schema. Synthetic records will be generated for the
 prototype. Expected answers for benchmark questions will be computed
 directly from the database and checked before use.
+
+### Querying domain: e-commerce and retail
+
+DataPilot AI answers business questions about an online retail business.
+The database has 10 tables in five areas: customers (A), products and
+categories (B), orders and payments (P), inventory and warehouses (V),
+and shipments and returns (E). Typical questions cover revenue and top
+products, customer and order activity, payment status, stock levels,
+delivery status, and returns.
+
+![DataPilot AI E-commerce and retail database ER diagram](docs/images/er_diagram.png)
+
+The diagram mirrors `database/database_creation/schema.sql`.
 
 ### Building the database
 

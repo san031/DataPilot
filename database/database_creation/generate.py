@@ -178,7 +178,7 @@ def gen_customers(rng):
         # random name from the two lists (names CAN repeat, like real life)
         first, last = rng.choice(FIRST), rng.choice(LAST)
 
-        
+        # signed up some time between Jan 2023 and Sep 2025
         reg = rand_date(rng, date(2023, 1, 1), date(2025, 9, 30))
 
         customers.append((

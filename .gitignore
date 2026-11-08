@@ -1,4 +1,9 @@
 .claude/*
 learning/*
 CLAUDE.md
-.venv/*
+.venv/
+data/*.db
+__pycache__/
+*.pyc
+AgentTune/
+AuditKIt/
