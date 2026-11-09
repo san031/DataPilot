@@ -5,7 +5,7 @@ from agent.react_agent import ask_datapilot
 model, tokenizer = load_model()
 
 question = """
-How many orders exist?
+Which five products have generated the highest revenue?
 """
 
 event_log = ask_datapilot(
