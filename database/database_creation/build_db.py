@@ -13,13 +13,15 @@ Uses only the Python standard library.
 
 import sys
 from pathlib import Path
+from database.db_connection import DB_PATH
+
 
 from database.database_creation.generate import generate_all, SEED
 from database.database_creation.load import load
 from database.database_creation.validate import validate
 
 # lexsi/data/ecommerce.db, no matter which folder you run this from
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "ecommerce.db"
+# DB_PATH = Path(__file__).resolve().parent.parent / "data" / "ecommerce.db"
 
 
 def main() -> None:
