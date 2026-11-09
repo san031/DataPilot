@@ -205,6 +205,8 @@ def make_react_policy(model, tokenizer):
             "role": "user",
             "content": context
         })
+        print("---- PROMPT ----\n", messages[-1]["content"][:3000])
+
 
         response = generate_response(
             model,
