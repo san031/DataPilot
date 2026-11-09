@@ -70,9 +70,70 @@ def extract_json(text):
     return json.loads(match.group())
 
 
+def parse_and_validate(response):
+    """Parse a model reply into an action dict, or raise ValueError."""
+
+    action = extract_json(response)
+
+    if not isinstance(action, dict):
+        raise ValueError("Expected a JSON dictionary")
+
+    name = action.get("name")
+    arguments = action.get("arguments", {})
+
+    if name not in ("get_schema", "execute_sql", "finish"):
+        raise ValueError(f"Invalid action: {name}")
+
+    if not isinstance(arguments, dict):
+        raise ValueError("Arguments must be a dictionary")
+
+    if name == "execute_sql" and not isinstance(arguments.get("query"), str):
+        raise ValueError("SQL query is missing")
+
+    if name == "finish" and not isinstance(arguments.get("answer"), str):
+        raise ValueError("Final answer is missing")
+
+    return action
+
+
 # =====================================================
 # 4. REACT POLICY
 # =====================================================
+
+def format_action(action):
+    """Serialise an action the way the model is asked to write it."""
+
+    return json.dumps({
+        "name": action["name"],
+        "arguments": action.get("arguments", {})
+    })
+
+
+def build_messages(user_prompt, observations, actions):
+    """
+    Chat history: system, user(task + rules), then one
+    assistant(action) / user(observation) pair per step taken.
+    Roles strictly alternate, as the Aya chat template requires.
+    """
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    for action_json, observation in zip(actions, observations[1:]):
+        messages.append({"role": "assistant", "content": action_json})
+        messages.append({
+            "role": "user",
+            "content": f"Tool observation:\n{observation}"
+        })
+
+    messages[-1]["content"] += (
+        "\n\nChoose your next action. Return JSON only."
+    )
+
+    return messages
+
 
 def make_datapilot_policy(model, tokenizer):
     """
@@ -105,12 +166,26 @@ def decide_next_action(state, model, tokenizer):
     # Enforce schema-first behaviour
     # -------------------------------------------------
 
+    # Actions already taken this episode (kept in the per-episode scratch dict).
+    actions = state.scratch.setdefault("actions", [])
+
     if state.step == 0:
 
-        return {
+        action = {
             "name": "get_schema",
             "arguments": {}
         }
+
+        actions.append(format_action(action))
+
+        return action
+
+    # Observation 0 is the task itself, then one result per action taken.
+    if len(observations) != len(actions) + 1:
+        raise ValueError(
+            f"History out of sync: {len(observations)} observations "
+            f"but {len(actions)} actions"
+        )
 
     # -------------------------------------------------
     # Construct next prompt
@@ -125,9 +200,6 @@ BUSINESS QUESTION:
 AVAILABLE TOOLS:
 {list(state.scratch["tools"])}
 
-PREVIOUS OBSERVATIONS:
-{json.dumps(observations, default=str)}
-
 INSTRUCTIONS:
 
 1. Use the retrieved database schema.
@@ -139,6 +211,8 @@ INSTRUCTIONS:
    the query.
 7. Do not repeat an unsuccessful query without changes.
 8. Finish only after obtaining sufficient information.
+9. If your last execute_sql succeeded and its rows answer the
+   question, your next action MUST be finish.
 
 Return ONLY one valid JSON object.
 
@@ -161,74 +235,62 @@ For completing the task:
 }}
 """
 
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT
-        },
-        {
-            "role": "user",
-            "content": user_prompt
-        }
-    ]
+    messages = build_messages(
+        user_prompt,
+        observations,
+        actions
+    )
 
     # -------------------------------------------------
     # Generate response using Aya
     # -------------------------------------------------
 
-    response = generate_response(
-        model,
-        tokenizer,
-        messages
-    )
-
     # -------------------------------------------------
-    # Parse action
+    # Generate and parse, retrying once on an invalid reply
     # -------------------------------------------------
 
-    try:
+    MAX_ATTEMPTS = 2
+    attempt_messages = messages
 
-        action = extract_json(response)
+    for attempt in range(MAX_ATTEMPTS):
 
-        if not isinstance(action, dict):
-            raise ValueError("Expected a JSON dictionary")
+        response = generate_response(
+            model,
+            tokenizer,
+            attempt_messages
+        )
 
-        name = action.get("name")
-        arguments = action.get("arguments", {})
+        try:
+            action = parse_and_validate(response)
 
-        if name not in (
-            "get_schema",
-            "execute_sql",
-            "finish"
-        ):
-            raise ValueError(f"Invalid action: {name}")
+            # Remember what we did, so the next prompt can show it.
+            actions.append(format_action(action))
 
-        if not isinstance(arguments, dict):
-            raise ValueError("Arguments must be a dictionary")
+            return action
 
-        if name == "execute_sql":
-            if not isinstance(arguments.get("query"), str):
-                raise ValueError("SQL query is missing")
+        except (json.JSONDecodeError, ValueError) as error:
 
-        if name == "finish":
-            if not isinstance(arguments.get("answer"), str):
-                raise ValueError("Final answer is missing")
+            print(f"Action parsing error (attempt {attempt + 1}):", error)
 
-        return action
+            # Show the model its own bad reply, then ask again.
+            attempt_messages = messages + [
+                {"role": "assistant", "content": response},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Your previous response was invalid: {error}. "
+                        "Return exactly one valid JSON action with "
+                        "name and arguments fields."
+                    )
+                }
+            ]
 
-    except (json.JSONDecodeError, ValueError) as error:
-
-        print("Action parsing error:", error)
-
-        return {
-            "name": "finish",
-            "arguments": {
-                "answer": (
-                    "Unable to generate a valid action. "
-                    "Please try again."
-                )
-            }
+    return {
+        "name": "finish",
+        "arguments": {
+            "answer": "Unable to generate a valid action."
         }
+    }
 
 
 # =====================================================
